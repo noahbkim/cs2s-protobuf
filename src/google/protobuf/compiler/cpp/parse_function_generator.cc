@@ -51,8 +51,7 @@ bool UseDirectTcParserTable(const FieldDescriptor* field,
                             const Options& options) {
   if (field->cpp_type() != field->CPPTYPE_MESSAGE) return false;
   auto* m = field->message_type();
-  return !m->options().message_set_wire_format() &&
-         m->file()->options().optimize_for() != FileOptions::CODE_SIZE &&
+  return m->file()->options().optimize_for() != FileOptions::CODE_SIZE &&
          !HasSimpleBaseClass(m, options) && !HasTracker(m, options) &&
          !HasWeakFields(m)
       ;  // NOLINT(whitespace/semicolon)
@@ -116,9 +115,13 @@ ParseFunctionGenerator::ParseFunctionGenerator(
   if (should_generate_tctable()) {
     tc_table_info_.reset(new TailCallTableInfo(
         descriptor_, ordered_fields_,
-        {/* is_lite */ GetOptimizeFor(descriptor->file(), options_) ==
-             FileOptions::LITE_RUNTIME,
-         /* uses_codegen */ true, options_.profile_driven_cluster_aux_subtable},
+        {
+            /* is_lite */ GetOptimizeFor(descriptor->file(), options_) ==
+                FileOptions::LITE_RUNTIME,
+            /* uses_codegen */ true,
+            options_.profile_driven_cluster_aux_subtable,
+            ShouldVerify(descriptor->file(), options_, scc_analyzer_),
+        },
         GeneratedOptionProvider(this), has_bit_indices,
         inlined_string_indices));
   }
@@ -143,18 +146,25 @@ void ParseFunctionGenerator::GenerateMethodImpls(io::Printer* printer) {
   Formatter format(printer, variables_);
   if (descriptor_->options().message_set_wire_format()) {
     // Special-case MessageSet.
-    format(
-        "const char* $classname$::_InternalParse(const char* ptr,\n"
-        "                  ::_pbi::ParseContext* ctx) {\n"
-        "$annotate_deserialize$");
-    if (ShouldVerify(descriptor_, options_, scc_analyzer_)) {
-      format(
-          "  ctx->set_lazy_eager_verify_func(&$classname$::InternalVerify);\n");
-    }
-    format(
-        "  return $extensions$.ParseMessageSet(ptr, \n"
-        "      internal_default_instance(), &_internal_metadata_, ctx);\n"
-        "}\n");
+    printer->Emit(
+        {{"verify",
+          [&] {
+            if (ShouldVerify(descriptor_, options_, scc_analyzer_)) {
+              printer->Emit(R"cc(
+                ctx->set_lazy_eager_verify_func(
+                    &_pbi::TcParser::DummyVerifyFunc);
+              )cc");
+            }
+          }}},
+        R"cc(
+          const char* $classname$::_InternalParse(const char* ptr,
+                                                  ::_pbi::ParseContext* ctx) {
+            $annotate_deserialize$;
+            $verify$;
+            return $extensions$.ParseMessageSet(
+                ptr, internal_default_instance(), &_internal_metadata_, ctx);
+          }
+        )cc");
     return;
   }
   if (HasWeakFields(descriptor_)) {

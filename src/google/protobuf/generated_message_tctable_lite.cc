@@ -2800,6 +2800,17 @@ PROTOBUF_NOINLINE const char* TcParser::MpMap(PROTOBUF_TC_PARAM_DECL) {
   PROTOBUF_MUSTTAIL return ToTagDispatch(PROTOBUF_TC_PARAM_NO_DATA_PASS);
 }
 
+const char* TcParser::DummyVerifyFunc(const char*, ParseContext*) {
+  ABSL_LOG(FATAL) << "Should never be called.";
+}
+
+const char* TcParser::MessageSetWireFormatParseLoopLiteNoVerify(
+    PROTOBUF_TC_PARAM_NO_DATA_DECL) {
+  PROTOBUF_MUSTTAIL return MessageSetWireFormatParseLoopImpl<MessageLite,
+                                                             false>(
+      PROTOBUF_TC_PARAM_NO_DATA_PASS);
+}
+
 }  // namespace internal
 }  // namespace protobuf
 }  // namespace google
