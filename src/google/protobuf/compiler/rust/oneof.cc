@@ -246,15 +246,20 @@ void GenerateOneofAccessors(Context<OneofDescriptor> oneof) {
             if (rs_type.empty()) {
               continue;
             }
-            // TODO: Allow mut.
-            /*oneof.Emit({
+            oneof.Emit(
+                {
                     {"case", ToCamelCase(field->name())},
-                    {"rs_getter", field->name() + "_mut"},
+                    {"rs_mut_getter", field->name() + "_mut"},
                     {"type", rs_type},
                 },
+                // We unwrap() into the Mut<> here. This will deliberately
+                // panic if the whichOneOf says a specific field is already set
+                // but immediately calling the corresponding field's mut
+                // accessor it shows up as unset: if will only happen if we have
+                // a bug in our own code which makes our expected invariants
+                // violated.
                 R"rs($Msg$_::$case_enum_name$::$case$ =>
-               $Msg$_::$mut_enum_name$::$case$(self.$rs_getter$()), )rs");
-            */
+               $Msg$_::$mut_enum_name$::$case$(self.$rs_mut_getter$().try_into_mut().unwrap()), )rs");
           }
         }},
        {"case_thunk", Thunk(oneof, "case")}},
