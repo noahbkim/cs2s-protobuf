@@ -500,11 +500,12 @@ final class FieldSet<T extends FieldSet.FieldDescriptorLite<T>> {
   private void mergeFromField(final Map.Entry<T, Object> entry) {
     final T descriptor = entry.getKey();
     Object otherValue = entry.getValue();
-    if (otherValue instanceof LazyField) {
-      otherValue = ((LazyField) otherValue).getValue();
-    }
+    boolean isLazyField = otherValue instanceof LazyField;
 
     if (descriptor.isRepeated()) {
+      if (isLazyField) {
+        throw new IllegalStateException("Lazy fields can not be repeated");
+      }
       Object value = getField(descriptor);
       if (value == null) {
         value = new ArrayList<>();
@@ -517,7 +518,13 @@ final class FieldSet<T extends FieldSet.FieldDescriptorLite<T>> {
       Object value = getField(descriptor);
       if (value == null) {
         fields.put(descriptor, cloneIfMutable(otherValue));
+        if (isLazyField) {
+          hasLazyField = true;
+        }
       } else {
+        if (otherValue instanceof LazyField) {
+          otherValue = ((LazyField) otherValue).getValue();
+        }
         // Merge the messages.
           value =
               descriptor
@@ -526,6 +533,9 @@ final class FieldSet<T extends FieldSet.FieldDescriptorLite<T>> {
         fields.put(descriptor, value);
       }
     } else {
+      if (isLazyField) {
+        throw new IllegalStateException("Lazy fields must be message-valued");
+      }
       fields.put(descriptor, cloneIfMutable(otherValue));
     }
   }
@@ -1274,11 +1284,12 @@ final class FieldSet<T extends FieldSet.FieldDescriptorLite<T>> {
     private void mergeFromField(final Map.Entry<T, Object> entry) {
       final T descriptor = entry.getKey();
       Object otherValue = entry.getValue();
-      if (otherValue instanceof LazyField) {
-        otherValue = ((LazyField) otherValue).getValue();
-      }
+      boolean isLazyField = otherValue instanceof LazyField;
 
       if (descriptor.isRepeated()) {
+        if (isLazyField) {
+          throw new IllegalStateException("Lazy fields can not be repeated");
+        }
         List<Object> value = (List<Object>) getFieldAllowBuilders(descriptor);
         if (value == null) {
           value = new ArrayList<>();
@@ -1291,7 +1302,13 @@ final class FieldSet<T extends FieldSet.FieldDescriptorLite<T>> {
         Object value = getFieldAllowBuilders(descriptor);
         if (value == null) {
           fields.put(descriptor, FieldSet.cloneIfMutable(otherValue));
+          if (isLazyField) {
+            hasLazyField = true;
+          }
         } else {
+          if (otherValue instanceof LazyField) {
+            otherValue = ((LazyField) otherValue).getValue();
+          }
           // Merge the messages.
           if (value instanceof MessageLite.Builder) {
             descriptor.internalMergeFrom((MessageLite.Builder) value, (MessageLite) otherValue);
@@ -1304,6 +1321,9 @@ final class FieldSet<T extends FieldSet.FieldDescriptorLite<T>> {
           }
         }
       } else {
+        if (isLazyField) {
+          throw new IllegalStateException("Lazy fields must be message-valued");
+        }
         fields.put(descriptor, cloneIfMutable(otherValue));
       }
     }
