@@ -349,3 +349,9 @@ endif (protobuf_BUILD_EXAMPLES)
 if(protobuf_VERBOSE)
   message(STATUS "Protocol Buffers Configuring done")
 endif(protobuf_VERBOSE)
+
+# Counter-Strike 2 compatibility
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+  message(STATUS "Added _GLIBCXX_USE_CXX11_ABI=0")
+endif()
