@@ -23,12 +23,14 @@ class ProtobufConan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
+        "fPIC": [True, False],
         "with_rtti": [True, False],
         "lite": [True, False],
         "debug_suffix": [True, False],
     }
     default_options = {
         "shared": False,
+        "fPIC": True,
         "with_rtti": True,
         "lite": False,
         "debug_suffix": True,
