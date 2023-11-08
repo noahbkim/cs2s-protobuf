@@ -13,7 +13,7 @@ required_conan_version = ">=1.53"
 
 class ProtobufConan(ConanFile):
     name = "protobuf"
-    version = "3.21.8"
+    version = "3.21.8+cs2"
     description = "Protocol Buffers - Google's data interchange format configured for Counter-Strike 2"
     topics = ("protocol-buffers", "protocol-compiler", "serialization", "rpc", "protocol-compiler", "cs2", "cs2s")
     url = "https://github.com/noahbkim/cs2s-protobuf"
