@@ -98,9 +98,9 @@ class ProtobufConan(ConanFile):
                     set(PROTOC_PROGRAM \"${{CMAKE_CURRENT_LIST_DIR}}/{protoc_rel_path}\")
                 endif()
                 get_filename_component(PROTOC_PROGRAM \"${{PROTOC_PROGRAM}}\" ABSOLUTE)
-                set(Protobuf_PROTOC_EXECUTABLE ${{PROTOC_PROGRAM}} CACHE FILEPATH \"The protoc compiler\")
+                set(protobuf_PROTOC_EXECUTABLE ${{PROTOC_PROGRAM}} CACHE FILEPATH \"The protoc compiler\")
                 add_executable(protobuf::protoc IMPORTED)
-                set_property(TARGET protobuf::protoc PROPERTY IMPORTED_LOCATION ${{Protobuf_PROTOC_EXECUTABLE}})
+                set_property(TARGET protobuf::protoc PROPERTY IMPORTED_LOCATION ${{protobuf_PROTOC_EXECUTABLE}})
             endif()
         """.format(protoc_rel_path=protoc_rel_path))
         replace_in_file(self,
@@ -132,7 +132,7 @@ class ProtobufConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.set_property("cmake_find_mode", "both")
-        self.cpp_info.set_property("cmake_module_file_name", "Protobuf")
+        self.cpp_info.set_property("cmake_module_file_name", "protobuf")
         self.cpp_info.set_property("cmake_file_name", "protobuf")
         self.cpp_info.set_property("pkg_config_name", "protobuf_full_package") # unofficial, but required to avoid side effects (libprotobuf component "steals" the default global pkg_config name)
 
@@ -184,8 +184,7 @@ class ProtobufConan(ConanFile):
                 self.cpp_info.components["libprotobuf-lite"].defines.append("_GLIBCXX_USE_CXX11_ABI=0")
 
         # TODO: to remove in conan v2 once cmake_find_package* & pkg_config generators removed
-        self.cpp_info.filenames["cmake_find_package"] = "Protobuf"
-        self.cpp_info.filenames["cmake_find_package_multi"] = "protobuf"
+        self.cpp_info.filenames["cmake_find_package"] = "protobuf"
         self.cpp_info.names["pkg_config"] ="protobuf_full_package"
         for generator in ["cmake_find_package", "cmake_find_package_multi"]:
             self.cpp_info.components["libprotobuf"].build_modules[generator] = build_modules
